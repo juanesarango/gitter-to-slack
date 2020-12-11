@@ -8,9 +8,6 @@ const gitterRoomSlug = process.env.GITTER_ROOM_SLUG
 const slackHookUrl = process.env.SLACK_HOOK_URL
 const heartbeat = ' \n'
 
-console.log('Git Room Id:', roomId)
-console.log('Git Room Name:', gitterRoomSlug)
-
 const options = {
   hostname: 'stream.gitter.im',
   port: 443,
@@ -18,17 +15,22 @@ const options = {
   method: 'GET',
   headers: { Authorization: 'Bearer ' + token },
 }
-const { hostname, path } = options
-console.log(`Listening to: https://${hostname}${path}`)
+
+console.log(`Listening to: https://${options.hostname}${options.path}`)
+console.log('Git Room Name:', gitterRoomSlug)
 
 const req = https.request(options, (res) => {
   res.on('data', (chunk) => {
     const msg = chunk.toString()
     if (msg !== heartbeat) {
-      console.log('Received Gitter payload: ' + msg + ' forwarding to Slack')
+      console.log(`Received Gitter payload: ${msg} forwarding to Slack`)
+
       const gitterData = JSON.parse(msg)
       const sentDate = moment(gitterData.sent).format('MMM-D h:mm A')
-      const slackMessage = `<https://gitter.im/${gitterRoomSlug}?at=${gitterData.id}|[${sentDate}] @${gitterData.fromUser.username}>: ${gitterData.text}`
+
+      const slackMessage =
+        `<https://gitter.im/${gitterRoomSlug}?at=${gitterData.id}|` +
+        `[${sentDate}] @${gitterData.fromUser.username}>: ${gitterData.text}`
 
       request.post(
         slackHookUrl,
