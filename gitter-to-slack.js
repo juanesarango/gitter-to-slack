@@ -12,7 +12,7 @@ const port = process.env.PORT || 443
 const options = {
   hostname: 'stream.gitter.im',
   port,
-  path: `/v1/rooms/${roomId}/${chatMessages}`,
+  path: `/v1/rooms/${roomId}/chatMessages`,
   method: 'GET',
   headers: { Authorization: 'Bearer ' + token },
 }
