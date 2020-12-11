@@ -7,11 +7,10 @@ const token = process.env.GITTER_TOKEN
 const gitterRoomSlug = process.env.GITTER_ROOM_SLUG
 const slackHookUrl = process.env.SLACK_HOOK_URL
 const heartbeat = ' \n'
-const port = process.env.PORT || 443
 
 const options = {
   hostname: 'stream.gitter.im',
-  port,
+  port: 443,
   path: `/v1/rooms/${roomId}/chatMessages`,
   method: 'GET',
   headers: { Authorization: 'Bearer ' + token },
