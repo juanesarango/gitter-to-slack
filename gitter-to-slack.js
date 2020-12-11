@@ -1,46 +1,50 @@
-var https = require('https');
-var request = require('request');
-var moment = require('moment');
+const https = require('https')
+const request = require('request')
+const moment = require('moment')
 
-var roomId    = process.env.GITTER_ROOM_ID;
-var token     = process.env.GITTER_TOKEN;
-var gitterRoomSlug = process.env.GITTER_ROOM_SLUG;
-var slackHookUrl = process.env.SLACK_HOOK_URL;
-var heartbeat = " \n";
+const roomId = process.env.GITTER_ROOM_ID
+const token = process.env.GITTER_TOKEN
+const gitterRoomSlug = process.env.GITTER_ROOM_SLUG
+const slackHookUrl = process.env.SLACK_HOOK_URL
+const heartbeat = ' \n'
 
-var options = {
+console.log('Git Room Id:', roomId)
+console.log('Git Room Name:', gitterRoomSlug)
+
+const options = {
   hostname: 'stream.gitter.im',
-  port:     443,
-  path:     '/v1/rooms/' + roomId + '/chatMessages',
-  method:   'GET',
-  headers:  {'Authorization': 'Bearer ' + token}
-};
+  port: 443,
+  path: '/v1/rooms/' + roomId + '/chatMessages',
+  method: 'GET',
+  headers: { Authorization: 'Bearer ' + token },
+}
+const { hostname, path } = options
+console.log(`Listening to: https://${hostname}${path}`)
 
-var req = https.request(options, function(res) {
-  res.on('data', function(chunk) {
-    var msg = chunk.toString();
+const req = https.request(options, (res) => {
+  res.on('data', (chunk) => {
+    const msg = chunk.toString()
     if (msg !== heartbeat) {
-      console.log('Received Gitter payload: ' + msg + ' forwarding to Slack');
-      var gitterData = JSON.parse(msg);
-      var slackMessage = '<https://gitter.im/' + gitterRoomSlug + '?at=' + gitterData.id;
-      slackMessage += '|' + gitterData.fromUser.displayName;
-      var sentDate = moment(gitterData.sent).format('MMM-D h:mm A')
-      slackMessage += ' [' + sentDate + ']>';
-      slackMessage += ': ' + gitterData.text;
-      request.post(slackHookUrl,
-        { json: { text: slackMessage} },
-        function (err, resp, body) {
+      console.log('Received Gitter payload: ' + msg + ' forwarding to Slack')
+      const gitterData = JSON.parse(msg)
+      const sentDate = moment(gitterData.sent).format('MMM-D h:mm A')
+      const slackMessage = `<https://gitter.im/${gitterRoomSlug}?at=${gitterData.id}|[${sentDate}] @${gitterData.fromUser.username}>: ${gitterData.text}`
+
+      request.post(
+        slackHookUrl,
+        { json: { text: slackMessage } },
+        (err, resp, body) => {
           if (err) {
-            console.log(err);
+            console.log(err)
           }
         }
       )
     }
-  });
-});
+  })
+})
 
-req.on('error', function(e) {
-  console.log('Something went wrong: ' + e.message);
-});
+req.on('error', (e) => {
+  console.log('Something went wrong: ' + e.message)
+})
 
-req.end();
+req.end()
